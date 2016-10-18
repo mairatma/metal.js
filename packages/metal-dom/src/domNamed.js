@@ -7,6 +7,7 @@ import DomEventHandle from './DomEventHandle';
 
 const elementsByTag_ = {};
 export const customEvents = {};
+const supportsCache_ = {};
 
 const NEXT_TARGET = '__metal_next_target__';
 const USE_CAPTURE = {
@@ -606,13 +607,17 @@ export function supportsEvent(element, eventName) {
 		return true;
 	}
 
-	if (isString(element)) {
-		if (!elementsByTag_[element]) {
-			elementsByTag_[element] = document.createElement(element);
+	if (!supportsCache_.hasOwnProperty(eventName)) {
+		if (isString(element)) {
+			if (!elementsByTag_[element]) {
+				elementsByTag_[element] = document.createElement(element);
+			}
+			element = elementsByTag_[element];
 		}
-		element = elementsByTag_[element];
+		supportsCache_[eventName] = 'on' + eventName in element;
 	}
-	return 'on' + eventName in element;
+
+	return supportsCache_[eventName];
 }
 
 /**
