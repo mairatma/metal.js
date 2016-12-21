@@ -445,6 +445,22 @@ describe('EventEmitter', function() {
 		assert.ok(listener.args[0][0].preventedDefault);
 	});
 
+	it('should set stopPropagation flag to true on facade when stopImmediatePropagation is called', function() {
+		var listener = sinon.stub();
+		var listenerTwo = sinon.spy(function(event) {
+			event.stopImmediatePropagation();
+		});
+
+		this.emitter.setShouldUseFacade(true);
+		this.emitter.once('event', listener);
+		this.emitter.once('event', listenerTwo);
+		this.emitter.once('event', listener);
+
+		this.emitter.emit('event');
+
+		assert.equal(1, listener.callCount);
+	});
+
 	it('should emit listener marked as default last', function() {
 		var listener1 = sinon.stub();
 		var listener2 = sinon.stub();

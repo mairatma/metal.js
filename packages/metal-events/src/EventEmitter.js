@@ -116,6 +116,9 @@ class EventEmitter extends Disposable {
 				preventDefault: function() {
 					facade.preventedDefault = true;
 				},
+				stopImmediatePropagation: function() {
+					facade.stopPropagation = true;
+				},
 				target: this,
 				type: event
 			};
@@ -167,6 +170,15 @@ class EventEmitter extends Disposable {
 	 */
 	getShouldUseFacade() {
 		return this.shouldUseFacade_;
+	}
+
+	/**
+	 * Gets the stopPropagation if an event facade called
+	 * the stopImmediatePropagation
+	 * @return {boolean}
+	 */
+	hasStopped_(facade) {
+		return facade && facade.stopPropagation;
 	}
 
 	/**
@@ -372,7 +384,8 @@ class EventEmitter extends Disposable {
 		}
 
 		const defaultListeners = [];
-		for (let i = 0; i < listeners.length; i++) {
+
+		for (let i = 0; i < listeners.length && !this.hasStopped_(facade); i++) {
 			const listener = listeners[i].fn || listeners[i];
 			if (listeners[i].default) {
 				defaultListeners.push(listener);
