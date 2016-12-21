@@ -47,7 +47,7 @@ export function stopInterception() {
 	fnStack.pop();
 }
 
-var originalFns = {
+const originalFns = {
 	attr: IncrementalDOM.attr,
 	attributes: IncrementalDOM.attributes[IncrementalDOM.symbols.default],
 	elementClose: IncrementalDOM.elementClose,
@@ -58,9 +58,9 @@ var originalFns = {
 	text: IncrementalDOM.text
 };
 
-var fnStack = [];
+const fnStack = [];
 
-var collectedArgs = [];
+let collectedArgs = [];
 
 function fnAttr(name, value) {
 	collectedArgs.push(name, value);
@@ -84,13 +84,15 @@ function getStack() {
 }
 
 function buildHandleCall(name) {
-	var data = {name};
-	var fn = handleCall.bind(data);
+	const data = {
+		name
+	};
+	const fn = handleCall.bind(data);
 	return fn;
 }
 
 function handleCall() {
-	const name = this.name; // jshint ignore:line
+	const name = this.name; // eslint-disable-line
 	const stack = getStack();
 	const fn = (stack && stack[name]) || originalFns[name];
 	return fn.apply(null, arguments);

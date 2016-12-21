@@ -658,6 +658,33 @@ describe('IncrementalDomRenderer', function() {
 				done();
 			});
 		});
+
+		it('should reattach events with same name on same element for different components', function() {
+			class TestComponent extends Component {
+				created() {
+					sinon.stub(this, 'handleClick');
+				}
+
+				handleClick() {
+				}
+
+				render() {
+					IncDom.elementVoid('div', null, null, 'data-onclick', 'handleClick');
+				}
+			}
+			TestComponent.RENDERER = IncrementalDomRenderer;
+
+			component = new TestComponent();
+			const element = component.element;
+			component.element = null;
+			component.dispose();
+
+			component = new TestComponent({
+				element
+			});
+			dom.triggerEvent(element, 'click');
+			assert.equal(1, component.handleClick.callCount);
+		});
 	});
 
 	describe('Nested Components', function() {
@@ -2531,8 +2558,7 @@ describe('IncrementalDomRenderer', function() {
 	describe('Function - shouldUpdate', function() {
 		it('should only rerender after state change if "shouldUpdate" returns true', function(done) {
 			class TestComponent extends Component {
-				render() {
-				}
+				render() {}
 
 				shouldUpdate(changes) {
 					return changes.foo && (changes.foo.prevVal !== changes.foo.newVal);
@@ -2825,8 +2851,8 @@ describe('IncrementalDomRenderer', function() {
 		it('should check if given data is an incremental dom node', function() {
 			assert.ok(!IncrementalDomRenderer.isIncDomNode({}));
 			assert.ok(!IncrementalDomRenderer.isIncDomNode({
-				tag: 'span'
-			}));
+					tag: 'span'
+				}));
 			assert.ok(IncrementalDomRenderer.isIncDomNode({
 				[CHILD_OWNER]: true
 			}));

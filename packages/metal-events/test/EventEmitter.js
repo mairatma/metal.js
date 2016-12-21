@@ -445,6 +445,22 @@ describe('EventEmitter', function() {
 		assert.ok(listener.args[0][0].preventedDefault);
 	});
 
+	it('should set stopPropagation flag to true on facade when stopImmediatePropagation is called', function() {
+		var listener = sinon.stub();
+		var listenerTwo = sinon.spy(function(event) {
+			event.stopImmediatePropagation();
+		});
+
+		this.emitter.setShouldUseFacade(true);
+		this.emitter.once('event', listener);
+		this.emitter.once('event', listenerTwo);
+		this.emitter.once('event', listener);
+
+		this.emitter.emit('event');
+
+		assert.equal(1, listener.callCount);
+	});
+
 	it('should emit listener marked as default last', function() {
 		var listener1 = sinon.stub();
 		var listener2 = sinon.stub();
@@ -477,6 +493,20 @@ describe('EventEmitter', function() {
 		assert.strictEqual(0, listenerDefault.callCount);
 		assert.strictEqual(1, listener1.callCount);
 		assert.strictEqual(1, listener2.callCount);
+	});
+
+	it('should allow listening to all event types via "*"', function() {
+		const listener = sinon.stub();
+		this.emitter.setShouldUseFacade(true);
+		this.emitter.on('*', listener);
+		this.emitter.emit('event1');
+		this.emitter.emit('event2');
+		this.emitter.emit('event3');
+
+		assert.equal(3, listener.callCount);
+		assert.equal('event1', listener.args[0][0].type);
+		assert.equal('event2', listener.args[1][0].type);
+		assert.equal('event3', listener.args[2][0].type);
 	});
 
 	it('should remove all listeners on dispose', function() {

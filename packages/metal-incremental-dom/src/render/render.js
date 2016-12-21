@@ -1,6 +1,6 @@
 'use strict';
 
-import { applyAttribute, attachFromAttrFirstTime } from './attributes';
+import { applyAttribute, convertListenerNamesToFns } from './attributes';
 import { buildConfigFromCall, buildCallFromConfig } from '../callArgs';
 import { captureChildren, getOwner, isChildTag, renderChildTree } from '../children/children';
 import { clearChanges } from '../changes';
@@ -18,37 +18,15 @@ const emptyChildren_ = [];
  * Adds the given css classes to the specified arguments for an incremental
  * dom call, merging with the existing value if there is one.
  * @param {string} elementClasses
- * @param {!Array} args
+ * @param {!Object} config
  * @private
  */
-function addElementClasses_(elementClasses, args) {
-	const config = buildConfigFromCall(args);
+function addElementClasses_(elementClasses, config) {
 	if (config.class) {
-		config.class += ' ' + elementClasses;
+		config.class += ` ${elementClasses}`;
 		config.class = removeDuplicateClasses_(config.class);
 	} else {
 		config.class = elementClasses;
-	}
-	return buildCallFromConfig(args[0], config);
-}
-
-/**
- * Attaches inline listeners found on the first component render, since those
- * may come from existing elements on the page that already have
- * data-on[eventname] attributes set to its final value. This won't trigger
- * `handleInterceptedAttributesCall_`, so we need manual work to guarantee
- * that projects using progressive enhancement like this will still work.
- * @param {!Component} component
- * @param {!Element} node
- * @param {!Array} args
- * @private
- */
-function attachDecoratedListeners_(component, node, args) {
-	if (!component.wasRendered) {
-		var attrs = (args[2] || []).concat(args.slice(3));
-		for (var i = 0; i < attrs.length; i += 2) {
-			attachFromAttrFirstTime(component, node, attrs[i], attrs[i + 1]);
-		}
 	}
 }
 
@@ -191,7 +169,7 @@ function getSubComponent_(tagOrCtor, config, owner) {
 			const type = getUid(Ctor, true);
 			data.currCount = data.currCount || {};
 			data.currCount[type] = data.currCount[type] || 0;
-			key = '__METAL_IC__' + type + '_' + data.currCount[type]++;
+			key = `__METAL_IC__${type}_${data.currCount[type]++}`;
 		}
 		comp = match_(data.prevComps ? data.prevComps[key] : null, Ctor, config, owner);
 		data.currComps = data.currComps || {};
@@ -264,31 +242,32 @@ function handleInterceptedOpenCall_(tag) {
  * @private
  */
 function handleRegularCall_(...args) {
+	const config = buildConfigFromCall(args);
+	let tag = args[0];
+
 	const comp = getComponentBeingRendered();
 	let owner = comp;
-	if (isChildTag(args[0])) {
-		owner = args[0].owner;
-		args[0] = args[0].tag;
+	if (isChildTag(tag)) {
+		owner = tag.owner;
+		tag = tag.tag;
 	}
-
-
-	args[1] = generateKey_(comp, args[1]);
+	config.key = generateKey_(comp, config.key);
 
 	if (!getData(comp).rootElementReached) {
 		const elementClasses = comp.getDataManager().get(comp, 'elementClasses');
 		if (elementClasses) {
-			args = addElementClasses_(elementClasses, args);
+			addElementClasses_(elementClasses, config);
 		}
 	}
+	convertListenerNamesToFns(comp, config);
 
-	const node = getOriginalFn('elementOpen').apply(null, args);
+	const call = buildCallFromConfig(tag, config);
+	const node = getOriginalFn('elementOpen').apply(null, call);
 	resetNodeData_(node);
-	attachDecoratedListeners_(comp, node, args);
 	updateElementIfNotReached_(comp, node);
 
-	const ref = node.getAttribute('ref');
-	if (isDefAndNotNull(ref)) {
-		owner.refs[ref] = node;
+	if (isDefAndNotNull(config.ref)) {
+		owner.refs[config.ref] = node;
 	}
 	owner.getRenderer().handleNodeRendered(node);
 
@@ -430,7 +409,7 @@ export function renderChild(child) {
  */
 function renderFromTag_(tag, config, opt_owner) {
 	if (isString(tag) || tag.prototype.getRenderer) {
-		var comp = renderSubComponent_(tag, config, opt_owner);
+		const comp = renderSubComponent_(tag, config, opt_owner);
 		updateElementIfNotReached_(getComponentBeingRendered(), comp.element);
 		return comp.element;
 	} else {
@@ -451,7 +430,7 @@ function renderFromTag_(tag, config, opt_owner) {
  */
 export function renderFunction(renderer, fnOrCtor, opt_dataOrElement, opt_parent) {
 	if (!Component.isComponentCtor(fnOrCtor)) {
-		var fn = fnOrCtor;
+		const fn = fnOrCtor;
 		class TempComponent extends Component {
 			created() {
 				const parent = getComponentBeingRendered();
@@ -534,8 +513,8 @@ function resetNodeData_(node) {
  * @protected
  */
 function updateContext_(comp, parent) {
-	var context = comp.context;
-	var childContext = parent.getChildContext ? parent.getChildContext() : null;
+	const context = comp.context;
+	const childContext = parent.getChildContext ? parent.getChildContext() : null;
 	object.mixin(context, parent.context, childContext);
 	comp.context = context;
 }
