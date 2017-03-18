@@ -390,6 +390,47 @@ describe('State', function() {
 		console.error = originalConsoleFn;
 	});
 
+	it('should throw error if validator returns an Error and shouldThrowValidationError is true', function() {
+		class Test extends State {
+			shouldThrowValidationError() {
+				return true;
+			}
+		}
+		var state = new Test();
+		state.configState(
+			{
+				key1: {
+					validator: function() {
+						return new Error();
+					}
+				}
+			}
+		);
+
+		assert.throws(() => state.key1 = 1);
+	});
+
+	it('should not throw error if validator returns an Error and shouldThrowValidationError is false', function() {
+		class Test extends State {
+			shouldThrowValidationError() {
+				return false;
+			}
+		}
+		var state = new Test();
+		state.configState(
+			{
+				key1: {
+					validator: function() {
+						return new Error();
+					}
+				}
+			}
+		);
+
+		assert.doesNotThrow(() => state.key1 = 1);
+		assert.strictEqual(1, state.key1);
+	});
+
 	it('should change state new value through setter', function() {
 		var state = new State();
 		state.configState({
@@ -549,6 +590,89 @@ describe('State', function() {
 
 			state.key = undefined;
 			assert.strictEqual(2, console.error.callCount);
+		});
+
+		it('should throw error if required property gets no initial value via configState and shouldThrowValidationError is true', function() {
+			class Test extends State {
+				shouldThrowValidationError() {
+					return true;
+				}
+			}
+			var state = new Test({
+				key2: 'initialValue'
+			});
+
+			assert.doesNotThrow(() => {
+				state.configState({
+					key1: {}
+				});
+			});
+
+			assert.doesNotThrow(() => {
+				state.configState(
+					{
+						key2: {
+							required: true
+						}
+					}
+				);
+			});
+
+			assert.throws(() => {
+				state.configState({
+					key3: {
+						required: true
+					}
+				});
+			});
+		});
+
+		it('should throw error if required property is set to null or undefined and shouldThrowValidationError is true', function() {
+			class Test extends State {
+				shouldThrowValidationError() {
+					return true;
+				}
+			}
+			var state = new Test({
+				key: 'initialValue'
+			});
+
+			assert.doesNotThrow(() => {
+				state.configState({
+					key: {
+						required: true
+					}
+				});
+			});
+
+			assert.doesNotThrow(() => {
+				state.key = 'value';
+			});
+
+			assert.throws(() => {
+				state.key = null;
+			});
+
+			assert.throws(() => {
+				state.key = undefined;
+			});
+		});
+
+		it('should throw error if required property is set to null or undefined and shouldThrowValidationError is true', function() {
+			class Test extends State {
+				shouldThrowValidationError() {
+					return true;
+				}
+			}
+			Test.STATE = {
+				key: {
+					required: true
+				}
+			};
+
+			assert.throws(() => {
+				new Test();
+			});
 		});
 	});
 
@@ -998,7 +1122,9 @@ describe('State', function() {
 			var obj = {};
 			var context = {};
 			var key1 = 1;
-			new Test({key1}, obj, context);
+			new Test({
+				key1
+			}, obj, context);
 			assert.strictEqual(1, obj.key1);
 			assert.strictEqual(1, validator.callCount);
 			assert.strictEqual(1, validator.args[0][0]);

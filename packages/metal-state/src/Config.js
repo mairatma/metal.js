@@ -28,12 +28,25 @@ import validators from './validators';
  */
 const Config = {
 	/**
+	 * Adds the `internal` flag to the `State` configuration.
+	 * @param {boolean} required Flag to set "internal" to. True by default.
+	 * @return {!Object} `State` configuration object.
+	 */
+	internal(internal = true) {
+		return mergeConfig(this, {
+			internal
+		});
+	},
+
+	/**
 	 * Adds the `required` flag to the `State` configuration.
 	 * @param {boolean} required Flag to set "required" to. True by default.
 	 * @return {!Object} `State` configuration object.
 	 */
 	required(required = true) {
-		return mergeConfig(this, {required});
+		return mergeConfig(this, {
+			required
+		});
 	},
 
 	/**
@@ -42,7 +55,9 @@ const Config = {
 	 * @return {!Object} `State` configuration object.
 	 */
 	setter(setter) {
-		return mergeConfig(this, {setter});
+		return mergeConfig(this, {
+			setter
+		});
 	},
 
 	/**
@@ -51,7 +66,9 @@ const Config = {
 	 * @return {!Object} `State` configuration object.
 	 */
 	validator(validator) {
-		return mergeConfig(this, {validator});
+		return mergeConfig(this, {
+			validator
+		});
 	},
 
 	/**
@@ -60,7 +77,9 @@ const Config = {
 	 * @return {!Object} `State` configuration object.
 	 */
 	value(value) {
-		return mergeConfig(this, {value});
+		return mergeConfig(this, {
+			value
+		});
 	}
 };
 
@@ -71,7 +90,7 @@ const Config = {
  * @return {!Object} The final object containing the built config.
  */
 function mergeConfig(context, config) {
-	var obj = context;
+	let obj = context;
 	if (obj === Config) {
 		obj = Object.create(Config);
 		obj.config = {};
@@ -81,7 +100,7 @@ function mergeConfig(context, config) {
 }
 
 // Add all validators to `Config`.
-var fnNames = Object.keys(validators);
+const fnNames = Object.keys(validators);
 fnNames.forEach(
 	name => Config[name] = function() {
 		return this.validator(validators[name]);

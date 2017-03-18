@@ -168,7 +168,7 @@ describe('core', function() {
 			assert.ok(!core.isString(undefined));
 
 			assert.ok(core.isString(''));
-			assert.ok(core.isString(new String(''))); // jshint ignore:line
+			assert.ok(core.isString(new String(''))); // eslint-disable-line
 		});
 
 		it('should check if var is boolean', function() {
@@ -205,6 +205,13 @@ describe('core', function() {
 			assert.ok(!core.isDocument({}));
 			assert.ok(!core.isDocument(null));
 			assert.ok(!core.isDocument(true));
+		});
+
+		it('should check if var is document fragment', function () {
+			assert.ok(!core.isDocumentFragment(null));
+			assert.ok(!core.isDocumentFragment({nodeType: 0}));
+			assert.ok(!core.isDocumentFragment({nodeType: 9}));
+			assert.ok(core.isDocumentFragment({nodeType: 11}));
 		});
 
 		it('should check if var is window', function() {
@@ -265,9 +272,7 @@ describe('core', function() {
 
 	describe('Compatibility Mode', function() {
 		afterEach(function() {
-			if (typeof window !== 'undefined') {
-				delete window.__METAL_COMPATIBILITY__;
-			}
+			window.__METAL_COMPATIBILITY__ = undefined;
 			core.disableCompatibilityMode();
 		});
 
@@ -282,10 +287,6 @@ describe('core', function() {
 		});
 
 		it('should return the data specified by global var', function() {
-			if (typeof window === 'undefined') {
-				// Skip this test in Node.js environment.
-				return;
-			}
 			const data = {};
 			window.__METAL_COMPATIBILITY__ = data;
 			assert.strictEqual(data, core.getCompatibilityModeData());

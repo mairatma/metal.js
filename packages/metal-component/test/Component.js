@@ -933,10 +933,35 @@ describe('Component', function() {
 		}
 		assert.ok(Component.isComponentCtor(Component));
 		assert.ok(Component.isComponentCtor(TestComponent));
-		assert.ok(!Component.isComponentCtor(() => {}));
-
-		var fn = () => {};
+		assert.ok(!Component.isComponentCtor(() => {
+			}));
+		var fn = () => {
+		};
 		assert.ok(!Component.isComponentCtor(fn.bind(this)));
+	});
+
+	it('should pass instance of component to __METAL_DEV_TOOLS_HOOK__ on first render', function() {
+		var hookStub = sinon.stub();
+		window.__METAL_DEV_TOOLS_HOOK__ = hookStub;
+		class CustomComponent extends Component {
+			constructor(...args) {
+				super(...args);
+				assert.ok(!this.wasRendered);
+			}
+		}
+
+		comp = Component.render(CustomComponent, {});
+
+		assert.ok(comp instanceof CustomComponent);
+		assert.ok(comp.wasRendered);
+		assert.ok(comp.element);
+		sinon.assert.callCount(hookStub, 1);
+		sinon.assert.calledWith(hookStub, comp);
+
+		comp.visible = false;
+
+		sinon.assert.callCount(hookStub, 1);
+		sinon.assert.calledWith(hookStub, comp);
 	});
 
 	function createCustomComponentClass(opt_rendererContentOrFn) {

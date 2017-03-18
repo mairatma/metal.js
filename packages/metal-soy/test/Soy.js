@@ -2,24 +2,20 @@
 
 import dom from 'metal-dom';
 import Component from 'metal-component';
-import { HelloWorld as HelloWorldComponent, templates as helloWorldTemplates } from './assets/HelloWorld.soy.js';
-import { IJData as IJDataComponent } from './assets/IJData.soy.js';
 import { Events as EventsComponent } from './assets/Events.soy.js';
-
-// For now we can't follow alphabetical order here, since HelloWorld.soy needs
-// to be imported before ExternalTemplate.soy, since ExternalTemplate depends
-// on it.
-// TODO: We should have a better dependency management for soy files so that
-// the order in which they're required doesn't matter.
+import { ComputedData as ComputedDataComponent } from './assets/ComputedData.soy.js';
 import { ExternalTemplate as ExternalTemplateComponent } from './assets/ExternalTemplate.soy.js';
 import { Functions as FunctionsComponent } from './assets/Functions.soy.js';
+import { HelloWorld as HelloWorldComponent, templates as helloWorldTemplates } from './assets/HelloWorld.soy.js';
 import { HtmlContent as HtmlContentComponent } from './assets/HtmlContent.soy.js';
+import { IJData as IJDataComponent } from './assets/IJData.soy.js';
 import { Nested as NestedComponent } from './assets/Nested.soy.js';
 import { NestedDataAll as NestedDataAllComponent } from './assets/NestedDataAll.soy.js';
 import { NestedLevels as NestedLevelsComponent } from './assets/NestedLevels.soy.js';
 import { NestedMultiple as NestedMultipleComponent } from './assets/NestedMultiple.soy.js';
 import { NestedNoData as NestedNoDataComponent } from './assets/NestedNoData.soy.js';
 import { TemplateData as TemplateDataComponent } from './assets/TemplateData.soy.js';
+import { TwoDivs as TwoDivs } from './assets/TwoDivs.soy.js';
 import Soy from '../src/Soy';
 
 describe('Soy', function() {
@@ -38,6 +34,17 @@ describe('Soy', function() {
 			assert.ok(dom.hasClass(comp.element, 'render'));
 			assert.strictEqual('Hello World!', comp.element.textContent);
 		});
+
+		it('should render two sibling elements without parent correctly', function() {
+			comp = new TwoDivs();
+
+			assert.strictEqual(2, comp.element.childNodes.length);
+			assert.strictEqual('DIV', comp.element.childNodes[0].tagName);
+			assert.strictEqual('DIV', comp.element.childNodes[1].tagName);
+			assert.strictEqual('X', comp.element.childNodes[0].textContent);
+			assert.strictEqual('Y', comp.element.childNodes[1].textContent);
+		});
+
 
 		it('should add soy param as state keys automatically', function() {
 			comp = new HelloWorldComponent({
@@ -111,6 +118,27 @@ describe('Soy', function() {
 					done();
 				});
 			});
+
+			it('should pass state values to "prepareStateForRender" and use them in the template', function(done) {
+				ComputedDataComponent.prototype.shouldUpdate = function() {
+					return true;
+				};
+
+				ComputedDataComponent.prototype.prepareStateForRender = function(data) {
+					data.name = data.name.split('').reverse().join('');
+				};
+
+				comp = new ComputedDataComponent({ name: 'Foo' });
+
+				assert.strictEqual('ooF', comp.element.textContent);
+
+				comp.name = 'Bar';
+
+				comp.once('stateSynced', function() {
+					assert.strictEqual('raB', comp.element.textContent);
+					done();
+				});
+			});
 		});
 
 		it('should not add sub template soy params as state keys', function() {
@@ -132,7 +160,6 @@ describe('Soy', function() {
 			}
 			NoTemplateComponent.RENDERER = Soy;
 
-			comp = new NoTemplateComponent();
 			assert.doesNotThrow(function() {
 				comp = new NoTemplateComponent();
 			});

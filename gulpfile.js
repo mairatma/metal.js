@@ -11,6 +11,7 @@ var replace = require('gulp-replace');
 var codeGlobs = [
 	'packages/metal*/src/**/*.js',
 	'packages/metal*/test/**/*.js',
+	'!packages/metal*/**/*.soy.js',
 	'!packages/metal-incremental-dom/**/incremental-dom.js',
 	'gulpfile.js',
 	'karma.conf.js',
@@ -21,14 +22,23 @@ metal.registerTasks({
 	bundleFileName: 'metal.js',
 	formatGlobs: codeGlobs,
 	karma: require('karma'),
-	// TODO: Find a way to lint jsx files (maybe use eslint instead of jshint).
-	lintGlobs: codeGlobs.concat('!packages/metal-jsx/test/**/*.js'),
+	lintGlobs: codeGlobs,
 	testDepTasks: ['build:cjs'],
 	testNodeSrc: [
+		// Since all files will be added, we need to ensure manually that these
+		// will be added first.
+		'packages/metal-incremental-dom/lib/incremental-dom.js',
+
+		// Test files
 		'env/test/node.js',
+		'packages/metal/test/**/*.js',
+		'packages/metal-component/test/**/*.js',
+		'packages/metal-dom/test/**/*.js',
 		'packages/metal-events/test/**/*.js',
-		'packages/metal-state/test/**/*.js',
-		'packages/metal/test/**/*.js'
+		'packages/metal-incremental-dom/test/**/*.js',
+		'packages/metal-jsx/test/**/*.js',
+		'packages/metal-soy/test/**/*.js',
+		'packages/metal-state/test/**/*.js'
 	],
 	testSaucelabsBrowsers: {
 		sl_chrome: {
@@ -80,7 +90,8 @@ metal.registerTasks({
 			platform: 'Linux',
 			version: '5.0'
 		}
-	}
+	},
+	useEslint: true
 });
 
 gulp.task('soy', function() {
@@ -102,7 +113,7 @@ gulp.task('compile', function() {
 
 // We need to override gulp-metal's default test:watch task so that it will
 // update lib files when the related src files change.
-gulp.task('test:watch', ['build:cjs'], function(done) { // jshint ignore:line
+gulp.task('test:watch', ['build:cjs'], function(done) { // eslint-disable-line
 	gulp.watch('packages/metal-soy/test/**/*.soy', ['soy']);
 	var jsWatcher = gulp.watch('packages/metal*/src/**/*.js', ['compile']);
 	jsWatcher.on('change', function(event) {

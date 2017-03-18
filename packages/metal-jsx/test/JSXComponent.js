@@ -146,7 +146,7 @@ describe('JSXComponent', function() {
 								<span>Children Test 3</span>
 							</ChildComponent>
 						</div>
-					);
+						);
 				}
 			}
 
@@ -175,7 +175,7 @@ describe('JSXComponent', function() {
 								<span foo="foo">Children Test</span>
 							</ChildComponent>
 						</div>
-					);
+						);
 				}
 			}
 
@@ -216,7 +216,7 @@ describe('JSXComponent', function() {
 		it('should render componentless functions via "JSXComponent.render"', function() {
 			var fn = props => {
 				return <div class="test">{props.foo}</div>;
-			}
+			};
 			var container = document.createElement('div');
 			JSXComponent.render(
 				fn,
@@ -254,7 +254,7 @@ describe('JSXComponent', function() {
 				foo: {
 					value: 'defaultFoo'
 				}
-			}
+			};
 
 			component = new TestComponent();
 			assert.strictEqual('defaultFoo', component.props.foo);
@@ -267,7 +267,7 @@ describe('JSXComponent', function() {
 				foo: {
 					value: 'defaultFoo'
 				}
-			}
+			};
 
 			component = new TestComponent();
 			assert.strictEqual('defaultFoo', component.state.foo);
@@ -311,8 +311,7 @@ describe('JSXComponent', function() {
 	describe('shouldUpdate', function() {
 		it('should not rerender after props change if shouldUpdate returns false', function(done) {
 			class TestComponent extends JSXComponent {
-				render() {
-				}
+				render() {}
 
 				shouldUpdate() {
 					return false;
@@ -322,7 +321,7 @@ describe('JSXComponent', function() {
 				foo: {
 					value: 'defaultFoo'
 				}
-			}
+			};
 			component = new TestComponent();
 
 			sinon.stub(component, 'render');
@@ -335,8 +334,7 @@ describe('JSXComponent', function() {
 
 		it('should not rerender after state change if shouldUpdate returns false', function(done) {
 			class TestComponent extends JSXComponent {
-				render() {
-				}
+				render() {}
 
 				shouldUpdate() {
 					return false;
@@ -346,7 +344,7 @@ describe('JSXComponent', function() {
 				foo: {
 					value: 'defaultFoo'
 				}
-			}
+			};
 			component = new TestComponent();
 
 			sinon.stub(component, 'render');

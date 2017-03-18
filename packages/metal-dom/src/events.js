@@ -1,9 +1,9 @@
 'use strict';
 
-import { registerCustomEvent } from './dom';
+import { registerCustomEvent, contains } from './dom';
 import features from './features';
 
-var mouseEventMap = {
+const mouseEventMap = {
 	mouseenter: 'mouseover',
 	mouseleave: 'mouseout',
 	pointerenter: 'pointerover',
@@ -13,9 +13,9 @@ Object.keys(mouseEventMap).forEach(function(eventName) {
 	registerCustomEvent(eventName, {
 		delegate: true,
 		handler: function(callback, event) {
-			var related = event.relatedTarget;
-			var target = event.delegateTarget;
-			if (!related || (related !== target && !target.contains(related))) {
+			const related = event.relatedTarget;
+			const target = event.delegateTarget;
+			if (!related || (related !== target && !contains(target, related))) {
 				event.customType = eventName;
 				return callback(event);
 			}
@@ -24,12 +24,12 @@ Object.keys(mouseEventMap).forEach(function(eventName) {
 	});
 });
 
-var animationEventMap = {
+const animationEventMap = {
 	animation: 'animationend',
 	transition: 'transitionend'
 };
 Object.keys(animationEventMap).forEach(function(eventType) {
-	var eventName = animationEventMap[eventType];
+	const eventName = animationEventMap[eventType];
 	registerCustomEvent(eventName, {
 		event: true,
 		delegate: true,
