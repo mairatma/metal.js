@@ -15,6 +15,7 @@ import { NestedLevels as NestedLevelsComponent } from './assets/NestedLevels.soy
 import { NestedMultiple as NestedMultipleComponent } from './assets/NestedMultiple.soy.js';
 import { NestedNoData as NestedNoDataComponent } from './assets/NestedNoData.soy.js';
 import { TemplateData as TemplateDataComponent } from './assets/TemplateData.soy.js';
+import { TwoDivs as TwoDivs } from './assets/TwoDivs.soy.js';
 import Soy from '../src/Soy';
 
 describe('Soy', function() {
@@ -33,6 +34,17 @@ describe('Soy', function() {
 			assert.ok(dom.hasClass(comp.element, 'render'));
 			assert.strictEqual('Hello World!', comp.element.textContent);
 		});
+
+		it('should render two sibling elements without parent correctly', function() {
+			comp = new TwoDivs();
+
+			assert.strictEqual(2, comp.element.childNodes.length);
+			assert.strictEqual('DIV', comp.element.childNodes[0].tagName);
+			assert.strictEqual('DIV', comp.element.childNodes[1].tagName);
+			assert.strictEqual('X', comp.element.childNodes[0].textContent);
+			assert.strictEqual('Y', comp.element.childNodes[1].textContent);
+		});
+
 
 		it('should add soy param as state keys automatically', function() {
 			comp = new HelloWorldComponent({
